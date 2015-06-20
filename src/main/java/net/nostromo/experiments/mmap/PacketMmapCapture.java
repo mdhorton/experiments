@@ -2,9 +2,9 @@ package net.nostromo.experiments.mmap;
 
 import com.sun.jna.LastErrorException;
 import com.sun.jna.Pointer;
+import net.nostromo.libc.AbstractPacketRxLoop;
 import net.nostromo.libc.LibcConstants;
 import net.nostromo.libc.PacketMmapSocket;
-import net.nostromo.libc.PacketRxLoop;
 import net.nostromo.libc.Structor;
 import net.nostromo.libc.c.sockaddr_ll;
 import net.nostromo.libc.c.tpacket_req3;
@@ -20,7 +20,7 @@ public class PacketMmapCapture implements LibcConstants {
             final String ifname = "enp2s0f1";
             final int cpuCore = 0;
             final int timeout = 100; // milliseconds
-            final int blockSize = 1 << 16; // should be power of 2 or space is wasted
+            final int blockSize = 1 << 20; // should be power of 2 or space is wasted
             final int blockCnt = 1 << 10;
 
             final int frameSize = 1 << 16; // this should always be a multiple of TPACKET_ALIGNMENT
@@ -41,9 +41,11 @@ public class PacketMmapCapture implements LibcConstants {
             final Pointer mmap = socket.mmap(mapSize);
             socket.bind(saLink);
 
-            final PacketRxLoop loop = new PacketRxLoop(mmap, socket.getFd(), blockSize, blockCnt) {
+            final long mmapAddress = Pointer.nativeValue(mmap);
+            final AbstractPacketRxLoop loop =
+                    new AbstractPacketRxLoop(mmapAddress, socket.getFd(), blockSize, blockCnt) {
 
-            };
+                    };
 
             loop.loop();
         } catch (final LastErrorException lle) {
