@@ -1,0 +1,14 @@
+<configuration>
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!--<pattern>%d{HH:mm:ss} %-5level %-40c{1} - %msg%n</pattern>-->
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry" level="debug"/>
+
+    <root level="info">
+        <appender-ref ref="stdout"/>
+    </root>
+</configuration>
