@@ -23,8 +23,8 @@ import net.nostromo.libc.AbstractPacketRxLoop;
 import net.nostromo.libc.LibcConstants;
 import net.nostromo.libc.PacketMmapSocket;
 import net.nostromo.libc.Structor;
-import net.nostromo.libc.c.sockaddr_ll;
-import net.nostromo.libc.c.tpacket_req3;
+import net.nostromo.libc.struct.c.sockaddr_ll;
+import net.nostromo.libc.struct.c.tpacket_req3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ public class PacketMmapCapture implements LibcConstants {
             final int blockSize = 1 << 20; // should be power of 2 or space is wasted
             final int blockCnt = 1 << 10;
 
-            final int frameSize = 1 << 16; // this should always be a multiple of TPACKET_ALIGNMENT
+            final int frameSize = 1 << 8; // this should always be a multiple of TPACKET_ALIGNMENT
             final int framesPerBlock = blockSize / frameSize;
             final long mapSize = (long) blockSize * blockCnt;
 
@@ -53,6 +53,8 @@ public class PacketMmapCapture implements LibcConstants {
             final sockaddr_ll saLink = Structor.sockaddr_ll(ifname, (short) PF_PACKET, ETH_P_ALL);
 
             final PacketMmapSocket socket = new PacketMmapSocket(PF_PACKET, SOCK_RAW, ETH_P_ALL);
+//            socket.disablePromiscuousMode(ifname);
+            socket.enablePromiscuousMode(ifname);
             socket.setupTPacketV3();
             socket.setupPacketRxRing(tpReq3);
             final Pointer mmap = socket.mmap(mapSize);
@@ -61,12 +63,11 @@ public class PacketMmapCapture implements LibcConstants {
             final long mmapAddress = Pointer.nativeValue(mmap);
             final AbstractPacketRxLoop loop =
                     new AbstractPacketRxLoop(mmapAddress, socket.getFd(), blockSize, blockCnt) {
-
                     };
 
             loop.loop();
         } catch (final LastErrorException lle) {
-            LOG.error(LIBC.strerror(lle.getErrorCode()));
+            LOG.error(libc.strerror(lle.getErrorCode()));
             LOG.error("error", lle);
         } catch (final Exception ex) {
             LOG.error("error", ex);

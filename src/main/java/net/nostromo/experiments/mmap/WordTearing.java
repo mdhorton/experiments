@@ -42,11 +42,11 @@ public class WordTearing implements LibcConstants {
         final Pointer emptyStrPtr = new Memory(1);
         emptyStrPtr.setString(0, "");
 
-        final int fd = LIBC.open(FNAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-        LIBC.ftruncate(fd, 0);
-        LIBC.lseek(fd, MAP_SIZE - 1, SEEK_SET);
-        LIBC.write(fd, emptyStrPtr, 1);
-        LIBC.lseek(fd, 0, SEEK_SET);
+        final int fd = libc.open(FNAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+        libc.ftruncate(fd, 0);
+        libc.lseek(fd, MAP_SIZE - 1, SEEK_SET);
+        libc.write(fd, emptyStrPtr, 1);
+        libc.lseek(fd, 0, SEEK_SET);
 
         final MmapThread mmap1 = new MmapThread(fd);
         final MmapThread mmap2 = new MmapThread(fd);
@@ -66,7 +66,7 @@ public class WordTearing implements LibcConstants {
         public void run() {
             try {
                 final Pointer p0 = new Pointer(0);
-                final Pointer mmap = LIBC.mmap(p0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+                final Pointer mmap = libc.mmap(p0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
                 final int a = 482624146;
                 final int b = -983725452;
@@ -81,7 +81,7 @@ public class WordTearing implements LibcConstants {
                     mmap.setInt(OFFSET, val == a ? b : a);
                 }
             } catch (final LastErrorException ex) {
-                LOG.error(LIBC.strerror(ex.getErrorCode()), ex);
+                LOG.error(libc.strerror(ex.getErrorCode()), ex);
             } catch (final Exception ex) {
                 LOG.error("error", ex);
             }
