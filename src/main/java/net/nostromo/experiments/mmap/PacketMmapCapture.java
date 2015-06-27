@@ -53,7 +53,7 @@ public class PacketMmapCapture implements LibcConstants {
             final sockaddr_ll saLink = Structor.sockaddr_ll(ifname, (short) PF_PACKET, ETH_P_ALL);
 
             final PacketMmapSocket socket = new PacketMmapSocket(PF_PACKET, SOCK_RAW, ETH_P_ALL);
-//            socket.disablePromiscuousMode(ifname);
+            socket.disablePromiscuousMode(ifname);
             socket.enablePromiscuousMode(ifname);
             socket.setupTPacketV3();
             socket.setupPacketRxRing(tpReq3);

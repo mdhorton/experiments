@@ -23,33 +23,41 @@ import sun.misc.Unsafe;
 
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
-import java.security.SecureRandom;
+import java.util.Random;
 
 public class ByteBufferPerf {
 
     public static void main(String[] args) throws Exception {
-        final SecureRandom random = new SecureRandom();
-
-        final Unsafe UNSAFE = TheUnsafe.UNSAFE;
+        final Unsafe unsafe = TheUnsafe.unsafe;
         final long offset = Unsafe.ARRAY_BYTE_BASE_OFFSET;
 
-        final byte[] buffer = new byte[8];
-        final LongBuffer lb = LongBuffer.allocate(1);
-        final LongBuffer dlb = ByteBuffer.allocateDirect(8).asLongBuffer();
-        final ByteBuffer bb = ByteBuffer.allocate(8);
+        final int len = 10;
+        final byte[] buffer = new byte[len * 8];
+        final LongBuffer lb = LongBuffer.allocate(len);
+        final LongBuffer dlb = ByteBuffer.allocateDirect(len * 8).asLongBuffer();
+        final ByteBuffer bb = ByteBuffer.allocate(len * 8);
+        final ByteBuffer dbb = ByteBuffer.allocateDirect(len * 8);
 
-        final long val = random.nextLong();
+        final Random rand = new Random();
 
-        UNSAFE.putLong(buffer, offset, val);
-        lb.put(0, val);
-        dlb.put(0, val);
-        bb.putLong(0, val);
+        for (int x = 0; x < len; x++) {
+            unsafe.putLong(buffer, offset + (x * 8), rand.nextLong());
+            lb.put(x, rand.nextLong());
+            dlb.put(x, rand.nextLong());
+            bb.putLong(x * 8, rand.nextLong());
+            dbb.putLong(x * 8, rand.nextLong());
+        }
 
-        final PerfTest test = new PerfTest(5, 100_000_000L);
+        final PerfTest test = new PerfTest(100_000_000L);
 
-        test.timedTest("Unsafe", () -> UNSAFE.getLong(buffer, offset));
-        test.timedTest("LongBuffer", () -> lb.get(0));
-        test.timedTest("direct LongBuffer", () -> dlb.get(0));
-        test.timedTest("ByteBuffer", () -> bb.getLong(0));
+        for (int x = 0; x < len; x++) {
+            final int y = x;
+            test.timedTest("ByteBuffer", () -> bb.getLong(y * 8));
+            test.timedTest("Direct ByteBuffer", () -> bb.getLong(y * 8));
+            test.timedTest("direct LongBuffer", () -> dlb.get(y));
+            test.timedTest("Unsafe", () -> unsafe.getLong(buffer, offset + (y * 8)));
+            test.timedTest("LongBuffer", () -> lb.get(y));
+            System.out.println("********************");
+        }
     }
 }
