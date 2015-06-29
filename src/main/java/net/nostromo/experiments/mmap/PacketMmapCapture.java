@@ -18,13 +18,6 @@
 package net.nostromo.experiments.mmap;
 
 import com.sun.jna.LastErrorException;
-import com.sun.jna.Pointer;
-import net.nostromo.libc.AbstractPacketRxLoop;
-import net.nostromo.libc.LibcConstants;
-import net.nostromo.libc.PacketMmapSocket;
-import net.nostromo.libc.Structor;
-import net.nostromo.libc.struct.c.sockaddr_ll;
-import net.nostromo.libc.struct.c.tpacket_req3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,23 +42,23 @@ public class PacketMmapCapture implements LibcConstants {
             LOG.info(fmt("frames/block: %,d  frame cnt: %,d", framesPerBlock, mapSize / frameSize));
             LOG.info(fmt("map sz: %,d", mapSize));
 
-            final tpacket_req3 tpReq3 = Structor.tpacket_req3(blockSize, frameSize, blockCnt, timeout, 0, 0);
-            final sockaddr_ll saLink = Structor.sockaddr_ll(ifname, (short) PF_PACKET, ETH_P_ALL);
+//            final tpacket_req3 tpReq3 = Structor.tpacket_req3(blockSize, frameSize, blockCnt, timeout, 0, 0);
+//            final sockaddr_ll saLink = Structor.sockaddr_ll(ifname, (short) PF_PACKET, ETH_P_ALL);
 
             final PacketMmapSocket socket = new PacketMmapSocket(PF_PACKET, SOCK_RAW, ETH_P_ALL);
-            socket.disablePromiscuousMode(ifname);
-            socket.enablePromiscuousMode(ifname);
-            socket.setupTPacketV3();
-            socket.setupPacketRxRing(tpReq3);
-            final Pointer mmap = socket.mmap(mapSize);
-            socket.bind(saLink);
+//            socket.disablePromiscuousMode(ifname);
+//            socket.enablePromiscuousMode(ifname);
+//            socket.setupTPacketV3();
+//            socket.setupPacketRxRing(tpReq3);
+//            final Pointer mmap = socket.mmap(mapSize);
+//            socket.bind(saLink);
 
-            final long mmapAddress = Pointer.nativeValue(mmap);
-            final AbstractPacketRxLoop loop =
-                    new AbstractPacketRxLoop(mmapAddress, socket.getFd(), blockSize, blockCnt) {
-                    };
+//            final long mmapAddress = Pointer.nativeValue(mmap);
+//            final AbstractPacketRxLoop loop =
+//                    new AbstractPacketRxLoop(mmapAddress, socket.getFd(), blockSize, blockCnt) {
+//                    };
 
-            loop.loop();
+//            loop.loop();
         } catch (final LastErrorException lle) {
             LOG.error(libc.strerror(lle.getErrorCode()));
             LOG.error("error", lle);

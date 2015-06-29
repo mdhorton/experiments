@@ -20,7 +20,6 @@ package net.nostromo.experiments.mmap;
 import com.sun.jna.LastErrorException;
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
-import net.nostromo.libc.LibcConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

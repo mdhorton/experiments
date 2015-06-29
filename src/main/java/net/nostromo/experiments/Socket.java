@@ -17,28 +17,24 @@
 
 package net.nostromo.experiments;
 
-public class PerfTest {
+import com.sun.jna.Structure;
+import net.nostromo.libc.Util;
 
-    private final long loopLimit;
+public class Socket implements LibcConstants {
 
-    public PerfTest(final long loopLimit) {
-        this.loopLimit = loopLimit;
+    protected final int fd;
+
+    public Socket(final int domain, final int type, final int protocol) {
+        fd = libc.socket(domain, type, Util.htons((short) protocol));
     }
 
-    public void timedTest(final String name, final Action action) {
-        final long start = System.nanoTime();
-
-        for (long y = 0; y < loopLimit; y++) {
-            if (action.execute() == null) {
-                throw new RuntimeException("null");
-            }
-        }
-
-        final long elapsed = System.nanoTime() - start;
-        System.out.printf("%s %,.0f per second\n", name, loopLimit / (elapsed / (double) 1_000_000_000));
+    public void bind(final Structure struct) {
+//        final sockaddr sa = new sockaddr(struct.getPointer());
+//        sa.read();
+//        libc.bind(fd, sa, struct.size());
     }
 
-    public interface Action {
-        Object execute();
+    public int getFd() {
+        return fd;
     }
 }
