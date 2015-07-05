@@ -15,26 +15,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.nostromo.experiments;
+package net.nostromo.experiments.network.tpacket;
 
-import com.sun.jna.Structure;
-import net.nostromo.libc.Util;
+public class TPacketPerfV2 extends TPacketPerf {
 
-public class Socket implements LibcConstants {
-
-    protected final int fd;
-
-    public Socket(final int domain, final int type, final int protocol) {
-        fd = libc.socket(domain, type, Util.htons((short) protocol));
+    @Override
+    protected TPacketHandler createHandler() {
+        final TPacketSocketV2 socket = new TPacketSocketV2(ifname, packetType, protocol, blockSize,
+                blockCnt, frameSize);
+        socket.initialize();
+        socket.setupFanout(fanoutId, fanoutType);
+        socket.setPacketCopyThreshold(frameSize);
+        socket.enablePromiscuous();
+        return new TPacketHandlerV2(socket);
     }
 
-    public void bind(final Structure struct) {
-//        final sockaddr sa = new sockaddr(struct.getPointer());
-//        sa.read();
-//        libc.bind(fd, sa, struct.size());
-    }
-
-    public int getFd() {
-        return fd;
+    public static void main(final String[] args) throws Exception {
+        final TPacketPerfV2 perf = new TPacketPerfV2();
+        perf.execute();
     }
 }

@@ -5,11 +5,11 @@ repositories {
 }
 
 ext {
-    mysqlVersion = "5.+"
+    logbackVersion = "1.+"
     troveVersion = "3.+"
 }
 
 dependencies {
-    compile "mysql:mysql-connector-java:$mysqlVersion",
+    compile "ch.qos.logback:logback-classic:$logbackVersion",
             "net.sf.trove4j:trove4j:$troveVersion"
 }

@@ -15,8 +15,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.nostromo.experiments.memcopy;
+package net.nostromo.experiments.memory;
 
+import net.nostromo.experiments.Util;
+import net.nostromo.libc.LibcHelper;
 import net.nostromo.libc.TheUnsafe;
 import sun.misc.Unsafe;
 
@@ -24,11 +26,35 @@ import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.util.Random;
 
-public class MemoryLongPerf {
+/**
+ * This experiment indicates that unsafe (onheap or offheap) is the fastest
+ * way to get a long from byte[].
+ * <p>
+ * I did this experiment because I needed a fast way to convert bytes into a
+ * data structure.
+ * <p>
+ * Example results:
+ * <p>
+ * iteration 7 of 10
+ * ByteBuffer: 5,994,838 ops/sec
+ * Direct ByteBuffer: 10,176,075 ops/sec
+ * Direct LongBuffer: 10,746,899 ops/sec
+ * Unsafe byte[]: 13,140,066 ops/sec
+ * Unsafe memory: 14,205,192 ops/sec
+ * LongBuffer: 10,278,674 ops/sec
+ */
+public class BytesPerf {
+
+    private static final Unsafe unsafe = TheUnsafe.unsafe;
+    private static final LibcHelper help = LibcHelper.helper;
 
     public static void main(String[] args) throws Exception {
-        final Unsafe unsafe = TheUnsafe.unsafe;
+        final int iterations = 10;
+        final long limit = 10_000_000L;
+
         final long offset = Unsafe.ARRAY_BYTE_BASE_OFFSET;
+
+        help.setCpu(8);
 
         final int len = 10;
         final long pointer = unsafe.allocateMemory(len * 8);
@@ -49,16 +75,18 @@ public class MemoryLongPerf {
             dbb.putLong(x * 8, rand.nextLong());
         }
 
-        final Timer timer = new Timer(100_000_000L, len);
+        final Timer timer = new Timer(limit, len);
 
-        for (int x = 0; x < 10; x++) {
+        for (int x = 0; x < iterations; x++) {
+            System.out.printf("\niteration %d of %d \n", (x + 1), iterations);
+
             timer.timed("ByteBuffer", new Looper(idx -> bb.getLong(idx * 8)));
             timer.timed("Direct ByteBuffer", new Looper(idx -> dbb.getLong(idx * 8)));
             timer.timed("Direct LongBuffer", new Looper(dlb::get));
-            timer.timed("Unsafe byte[]", new Looper(idx -> unsafe.getLong(buffer, offset + (idx * 8))));
+            timer.timed("Unsafe byte[]",
+                    new Looper(idx -> unsafe.getLong(buffer, offset + (idx * 8))));
             timer.timed("Unsafe memory", new Looper(idx -> unsafe.getLong(pointer + (idx * 8))));
             timer.timed("LongBuffer", new Looper(lb::get));
-            System.out.println("*******************");
         }
     }
 
@@ -82,7 +110,11 @@ public class MemoryLongPerf {
             }
 
             final long elapsed = System.nanoTime() - start;
-            System.out.printf("%s %,.0f per second  %d\n", name, loopLimit / (elapsed / (double) 1_000_000_000), max);
+            System.out.printf("%s: %,.0f ops/sec\n", name, Util.tps(loopLimit, elapsed));
+
+            if (max == Long.MIN_VALUE) {
+                System.out.println("just a test");
+            }
         }
     }
 

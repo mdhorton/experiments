@@ -15,37 +15,42 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.nostromo.experiments.mmap;
+package net.nostromo.experiments.memory;
 
-import com.sun.jna.LastErrorException;
-import com.sun.jna.Memory;
-import com.sun.jna.Pointer;
+import net.nostromo.libc.Libc;
+import net.nostromo.libc.LibcConstants;
+import net.nostromo.libc.TheUnsafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.misc.Unsafe;
 
 // Prove that word tearing can exist when using mmap.
 public class WordTearing implements LibcConstants {
 
     private static final Logger LOG = LoggerFactory.getLogger(WordTearing.class);
 
+    private static final Unsafe unsafe = TheUnsafe.unsafe;
+    private static final Libc libc = Libc.libc;
+
     private static final String FNAME = "mmap.bin";
     private static final long MAP_SIZE = 128;
 
     // when OFFSET is between 61-63 it will cause word tearing.
-    // my understanding is that this is due to r/w across cache lines.
+    // this is due to r/w across cache lines.
     // cache lines are typically 64 bytes.
     // set OFFSET <60 and it works fine.
     private static final long OFFSET = 61;
 
     public static void main(String[] args) throws Exception {
-        final Pointer emptyStrPtr = new Memory(1);
-        emptyStrPtr.setString(0, "");
+        final long empty = unsafe.allocateMemory(1);
 
         final int fd = libc.open(FNAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
         libc.ftruncate(fd, 0);
         libc.lseek(fd, MAP_SIZE - 1, SEEK_SET);
-        libc.write(fd, emptyStrPtr, 1);
+        libc.write(fd, empty, 1);
         libc.lseek(fd, 0, SEEK_SET);
+
+        unsafe.freeMemory(empty);
 
         final MmapThread mmap1 = new MmapThread(fd);
         final MmapThread mmap2 = new MmapThread(fd);
@@ -64,24 +69,22 @@ public class WordTearing implements LibcConstants {
         @Override
         public void run() {
             try {
-                final Pointer p0 = new Pointer(0);
-                final Pointer mmap = libc.mmap(p0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-
                 final int a = 482624146;
                 final int b = -983725452;
 
+                final long mmap = libc.mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
                 while (true) {
-                    final int val = mmap.getInt(OFFSET);
+                    final int val = unsafe.getInt(null, mmap + OFFSET);
                     if (val != 0) {
                         if (val != a && val != b) {
                             throw new RuntimeException("val: " + val);
                         }
                     }
-                    mmap.setInt(OFFSET, val == a ? b : a);
+                    unsafe.putInt(null, mmap + OFFSET, val == a ? b : a);
                 }
-            } catch (final LastErrorException ex) {
-                LOG.error(libc.strerror(ex.getErrorCode()), ex);
-            } catch (final Exception ex) {
+            }
+            catch (final Exception ex) {
                 LOG.error("error", ex);
             }
         }
