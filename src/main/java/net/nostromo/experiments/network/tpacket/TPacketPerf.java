@@ -34,7 +34,9 @@ public abstract class TPacketPerf implements LibcConstants {
     protected final LibcHelper help = LibcHelper.helper;
     protected final Libc libc = Libc.libc;
 
-    protected String ifname = "lo";
+    protected boolean usePromisc = false;
+
+    protected String ifname = "lo"; //"enp2s0f1";
     protected int packetType = SOCK_RAW;
     protected int protocol = ETH_P_ALL;
 
@@ -42,10 +44,10 @@ public abstract class TPacketPerf implements LibcConstants {
     protected int fanoutType = PACKET_FANOUT_LB | PACKET_FANOUT_FLAG_DEFRAG;
 
     protected int blockSize = 1 << 20;
-    protected int blockCnt = 1 << 12;
-    protected int frameSize = 1 << 9;
+    protected int blockCnt = 1 << 10;
+    protected int frameSize = 1 << 10;
 
-    protected int threadCnt = 4;
+    protected int threadCnt = 1;
     protected int startCpu = 2;
 
     protected int framesPerBlock = blockSize / frameSize;
@@ -76,7 +78,7 @@ public abstract class TPacketPerf implements LibcConstants {
     }
 
     protected void logConfig() {
-        log.info(F("ifname: %s", ifname));
+        log.info(F("ifname: %s  promisc: %s", ifname, usePromisc));
         log.info(F("frame sz: %,d  block sz: %,d  block cnt: %,d", frameSize, blockSize, blockCnt));
         log.info(F("frames/block: %,d  frame cnt: %,d", framesPerBlock, mapSize / frameSize));
         log.info(F("map sz: %,d  thread cnt: %,d  start cpu: %,d", mapSize, threadCnt, startCpu));

@@ -20,9 +20,10 @@ package net.nostromo.experiments.network.tpacket;
 import net.nostromo.libc.Libc;
 import net.nostromo.libc.LibcConstants;
 import net.nostromo.libc.LibcHelper;
-import net.nostromo.libc.Util;
 import net.nostromo.libc.struct.IntRef;
 import net.nostromo.libc.struct.network.socket.SockAddrLl;
+
+import static net.nostromo.libc.Util.htonl;
 
 public abstract class TPacketSocket implements LibcConstants {
 
@@ -62,12 +63,12 @@ public abstract class TPacketSocket implements LibcConstants {
     protected abstract void setupRxRing();
 
     protected int createSocket() {
-        return libc.socket(PF_PACKET, packetType, Util.htonl(protocol));
+        return libc.socket(PF_PACKET, packetType, htonl(protocol));
     }
 
     protected void setupVersion() {
-        final IntRef verRef = new IntRef(version);
-        libc.setsockopt(sock, SOL_PACKET, PACKET_VERSION, verRef.pointer(), Integer.BYTES);
+        final IntRef ref = new IntRef(version);
+        libc.setsockopt(sock, SOL_PACKET, PACKET_VERSION, ref.pointer(), Integer.BYTES);
     }
 
     protected long createMmap() {
@@ -85,8 +86,8 @@ public abstract class TPacketSocket implements LibcConstants {
     }
 
     public void setupFanout(final int fanoutId, final int fanoutType) {
-        final IntRef fanRef = new IntRef((fanoutId & 0xffff) | (fanoutType << 16));
-        libc.setsockopt(sock, SOL_PACKET, PACKET_FANOUT, fanRef.pointer(), Integer.BYTES);
+        final IntRef ref = new IntRef((fanoutId & 0xffff) | (fanoutType << 16));
+        libc.setsockopt(sock, SOL_PACKET, PACKET_FANOUT, ref.pointer(), Integer.BYTES);
     }
 
     public void enablePromiscuous() {

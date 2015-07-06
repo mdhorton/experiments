@@ -37,8 +37,8 @@ public abstract class TPacketHandler implements LibcConstants {
     protected final Unsafe unsafe = TheUnsafe.unsafe;
     protected final Libc libc = Libc.libc;
 
-    protected final byte[] payload = new byte[65536]; // 65k
-    protected final long logIval = (1 << 20) - 1;     // 1M
+    protected final byte[] payload = new byte[1 << 16]; // 65k
+    protected final long logIval = (1 << 20) - 1;       // 1m
 
     protected final TPacketSocket socket;
 

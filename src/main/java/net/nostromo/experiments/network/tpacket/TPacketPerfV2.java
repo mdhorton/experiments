@@ -19,19 +19,22 @@ package net.nostromo.experiments.network.tpacket;
 
 public class TPacketPerfV2 extends TPacketPerf {
 
+    // currently this is bugged
+    protected boolean useCopyThreshold = false;
+
+    public static void main(final String[] args) throws Exception {
+        final TPacketPerfV2 perf = new TPacketPerfV2();
+        perf.execute();
+    }
+
     @Override
     protected TPacketHandler createHandler() {
         final TPacketSocketV2 socket = new TPacketSocketV2(ifname, packetType, protocol, blockSize,
                 blockCnt, frameSize);
         socket.initialize();
-        socket.setupFanout(fanoutId, fanoutType);
-        socket.setPacketCopyThreshold(frameSize);
-        socket.enablePromiscuous();
+        if (useCopyThreshold) socket.setPacketCopyThreshold(frameSize);
+        if (threadCnt > 1) socket.setupFanout(fanoutId, fanoutType);
+        if (usePromisc) socket.enablePromiscuous();
         return new TPacketHandlerV2(socket);
-    }
-
-    public static void main(final String[] args) throws Exception {
-        final TPacketPerfV2 perf = new TPacketPerfV2();
-        perf.execute();
     }
 }

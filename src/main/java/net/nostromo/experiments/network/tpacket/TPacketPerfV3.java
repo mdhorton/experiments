@@ -21,20 +21,18 @@ public class TPacketPerfV3 extends TPacketPerf {
 
     protected final int timeout = 100; // milliseconds
 
+    public static void main(String[] args) throws Exception {
+        final TPacketPerfV3 perf = new TPacketPerfV3();
+        perf.execute();
+    }
+
     @Override
     protected TPacketHandler createHandler() {
         final TPacketSocketV3 socket = new TPacketSocketV3(ifname, packetType, protocol, blockSize,
                 blockCnt, frameSize, timeout);
         socket.initialize();
-        socket.setupFanout(fanoutId, fanoutType);
-//        socket.enablePromiscuous();
+        if (threadCnt > 1) socket.setupFanout(fanoutId, fanoutType);
+        if (usePromisc) socket.enablePromiscuous();
         return new TPacketHandlerV3(socket);
-    }
-
-    public static void main(String[] args) throws Exception {
-        final TPacketPerfV3 perf = new TPacketPerfV3();
-        perf.ifname = "enp2s0f1";
-        perf.startCpu = 16;
-        perf.execute();
     }
 }

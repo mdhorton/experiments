@@ -8,7 +8,7 @@
 
     <logger name="org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry" level="debug"/>
 
-    <root level="info">
+    <root level="debug">
         <appender-ref ref="stdout"/>
     </root>
 </configuration>

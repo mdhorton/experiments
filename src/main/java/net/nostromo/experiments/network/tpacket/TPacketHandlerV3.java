@@ -39,6 +39,7 @@ public class TPacketHandlerV3 extends TPacketHandler {
         final PollFd pollfd = new PollFd();
         pollfd.fd = socket.sock;
         pollfd.events = (short) (POLLIN | POLLERR);
+        pollfd.revents = 0;
         pollfd.write();
 
         int index = 0;
@@ -48,6 +49,7 @@ public class TPacketHandlerV3 extends TPacketHandler {
             final long statusOffset = socket.mmap + startOffset + 8L;
 
             while ((unsafe.getInt(statusOffset) & TP_STATUS_USER) == 0) {
+                log.debug("polling: {}", index);
                 libc.poll(pollfd.bufferPointer(), 1, -1);
             }
 
