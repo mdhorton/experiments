@@ -17,6 +17,10 @@
 
 package net.nostromo.experiments.network.tpacket;
 
+import net.nostromo.tpacket.TPacketHandler;
+import net.nostromo.tpacket.TPacketHandlerV2;
+import net.nostromo.tpacket.TPacketSocketV2;
+
 public class TPacketPerfV2 extends TPacketPerf {
 
     // currently this is bugged

@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/experiments.iml" filepath="$PROJECT_DIR$/experiments.iml" />
       <module fileurl="file://$PROJECT_DIR$/../libc/libc.iml" filepath="$PROJECT_DIR$/../libc/libc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../tpacket/tpacket.iml" filepath="$PROJECT_DIR$/../tpacket/tpacket.iml" />
     </modules>
   </component>
 </project>

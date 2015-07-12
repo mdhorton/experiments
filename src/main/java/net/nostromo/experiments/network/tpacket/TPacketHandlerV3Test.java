@@ -17,11 +17,25 @@
 
 package net.nostromo.experiments.network.tpacket;
 
-public class TPacketHandlerV2Custom extends TPacketHandlerV2 {
+import net.nostromo.libc.Util;
+import net.nostromo.tpacket.TPacketHandlerV3;
+import net.nostromo.tpacket.TPacketSocket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    public TPacketHandlerV2Custom(final TPacketSocket socket) {
+public class TPacketHandlerV3Test extends TPacketHandlerV3 {
+
+    protected final Logger log = LoggerFactory.getLogger(getClass());
+
+    public TPacketHandlerV3Test(final TPacketSocket socket) {
         super(socket);
     }
 
-
+    @Override
+    protected void handleTcpPacket(final long offset, final int snaplen) {
+        super.handleTcpPacket(offset, snaplen);
+        if (tcpHdr.dst_port == 22 && Util.inetNtoA(ipHdr.dst_ip).equals("54.175.51.235")) {
+            log.info("{}", Integer.toUnsignedLong(tp3Hdr.hv1_u.hv1.rxhash));
+        }
+    }
 }

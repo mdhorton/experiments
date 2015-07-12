@@ -24,7 +24,7 @@ import net.nostromo.libc.struct.system.Timespec;
 
 public class CurrentTime implements LibcConstants {
 
-    private final Libc libc = Libc.libc;
+    private static final Libc libc = Libc.libc;
 
     private final long limit;
 
@@ -52,11 +52,17 @@ public class CurrentTime implements LibcConstants {
         final Timespec timespec = new Timespec();
         final long ptr_timespec = timespec.pointer();
 
+        final long[] vals = new long[2];
+
         for (long idx = 0; idx < limit; idx++) {
             libc.clock_gettime(clockId, ptr_timespec);
             timespec.read();
             if (timespec.tv_sec < 0) return idx;
+            if (idx > limit - 3) vals[((int) (limit - idx - 1))] = timespec.tv_nsec;
         }
+
+        final long diff = vals[0] - vals[1];
+        System.out.printf("last 2 values: %,d  %,d  diff: %,d\n", vals[1], vals[0], diff);
 
         return limit;
     }
@@ -72,21 +78,20 @@ public class CurrentTime implements LibcConstants {
         final int iterations = 10;
         final long limit = 10_000_000L;
 
-        final CurrentTime nanos = new CurrentTime(limit);
+        final CurrentTime time = new CurrentTime(limit);
 
         for (int x = 0; x < iterations; x++) {
             System.out.printf("\niteration %d of %d\n", (x + 1), iterations);
 
-            nanos.results("nano", System.nanoTime(), nanos.testNanos());
-            nanos.results("millis", System.nanoTime(), nanos.testMillis());
-            nanos.results("monotonic", System.nanoTime(), nanos.testNative(CLOCK_MONOTONIC));
-            nanos.results("monotonic coarse", System.nanoTime(),
-                    nanos.testNative(CLOCK_MONOTONIC_COARSE));
-            nanos.results("monotonic raw", System.nanoTime(),
-                    nanos.testNative(CLOCK_MONOTONIC_RAW));
-            nanos.results("realtime", System.nanoTime(), nanos.testNative(CLOCK_REALTIME));
-            nanos.results("realtime coarse", System.nanoTime(),
-                    nanos.testNative(CLOCK_REALTIME_COARSE));
+            time.results("nano", System.nanoTime(), time.testNanos());
+            time.results("millis", System.nanoTime(), time.testMillis());
+            time.results("monotonic", System.nanoTime(), time.testNative(CLOCK_MONOTONIC));
+            time.results("monotonic coarse", System.nanoTime(),
+                    time.testNative(CLOCK_MONOTONIC_COARSE));
+            time.results("monotonic raw", System.nanoTime(), time.testNative(CLOCK_MONOTONIC_RAW));
+            time.results("realtime", System.nanoTime(), time.testNative(CLOCK_REALTIME));
+            time.results("realtime coarse", System.nanoTime(),
+                    time.testNative(CLOCK_REALTIME_COARSE));
         }
     }
 }

@@ -18,7 +18,7 @@
 package net.nostromo.experiments.memory;
 
 import net.nostromo.experiments.Util;
-import net.nostromo.libc.LibcHelper;
+import net.nostromo.libc.LibcUtil;
 import net.nostromo.libc.TheUnsafe;
 import sun.misc.Unsafe;
 
@@ -52,13 +52,13 @@ import sun.misc.Unsafe;
 public class BytesVsMemoryPerf {
 
     private static final Unsafe unsafe = TheUnsafe.unsafe;
-    private static final LibcHelper help = LibcHelper.helper;
+    private static final LibcUtil util = LibcUtil.util;
 
     public static void main(String[] args) throws Exception {
         final int iterations = 10;
         final long limit = 100_000_000L;
 
-        help.setCpu(8);
+        util.setCpu(8);
 
         final byte[] arr = new byte[58];
         final long memory = unsafe.allocateMemory(arr.length);

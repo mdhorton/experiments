@@ -15,9 +15,10 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="Gradle: net.sf.trove4j:trove4j:3.0.3" level="project" />
-    <orderEntry type="module" module-name="libc" />
     <orderEntry type="library" exported="" name="Gradle: ch.qos.logback:logback-classic:1.1.3" level="project" />
     <orderEntry type="library" exported="" name="Gradle: ch.qos.logback:logback-core:1.1.3" level="project" />
     <orderEntry type="library" exported="" name="Gradle: org.slf4j:slf4j-api:1.7.7" level="project" />
+    <orderEntry type="module" module-name="tpacket" />
+    <orderEntry type="module" module-name="libc" />
   </component>
 </module>

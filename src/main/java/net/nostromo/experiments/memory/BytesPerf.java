@@ -18,7 +18,7 @@
 package net.nostromo.experiments.memory;
 
 import net.nostromo.experiments.Util;
-import net.nostromo.libc.LibcHelper;
+import net.nostromo.libc.LibcUtil;
 import net.nostromo.libc.TheUnsafe;
 import sun.misc.Unsafe;
 
@@ -46,7 +46,7 @@ import java.util.Random;
 public class BytesPerf {
 
     private static final Unsafe unsafe = TheUnsafe.unsafe;
-    private static final LibcHelper help = LibcHelper.helper;
+    private static final LibcUtil util = LibcUtil.util;
 
     public static void main(String[] args) throws Exception {
         final int iterations = 10;
@@ -54,7 +54,7 @@ public class BytesPerf {
 
         final long offset = Unsafe.ARRAY_BYTE_BASE_OFFSET;
 
-        help.setCpu(8);
+        util.setCpu(8);
 
         final int len = 10;
         final long pointer = unsafe.allocateMemory(len * 8);

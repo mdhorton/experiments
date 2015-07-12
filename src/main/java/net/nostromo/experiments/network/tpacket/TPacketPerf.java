@@ -19,7 +19,8 @@ package net.nostromo.experiments.network.tpacket;
 
 import net.nostromo.libc.Libc;
 import net.nostromo.libc.LibcConstants;
-import net.nostromo.libc.LibcHelper;
+import net.nostromo.libc.LibcUtil;
+import net.nostromo.tpacket.TPacketHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,12 +32,12 @@ import static net.nostromo.experiments.Util.F;
 public abstract class TPacketPerf implements LibcConstants {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    protected final LibcHelper help = LibcHelper.helper;
     protected final Libc libc = Libc.libc;
+    protected final LibcUtil util = LibcUtil.util;
 
     protected boolean usePromisc = false;
 
-    protected String ifname = "lo"; //"enp2s0f1";
+    protected String ifname = "enp2s0f1";
     protected int packetType = SOCK_RAW;
     protected int protocol = ETH_P_ALL;
 
@@ -45,10 +46,10 @@ public abstract class TPacketPerf implements LibcConstants {
 
     protected int blockSize = 1 << 20;
     protected int blockCnt = 1 << 10;
-    protected int frameSize = 1 << 10;
+    protected int frameSize = 1 << 11;
 
     protected int threadCnt = 1;
-    protected int startCpu = 2;
+    protected int startCpu = 8;
 
     protected int framesPerBlock = blockSize / frameSize;
     protected long mapSize = (long) blockSize * blockCnt;
@@ -64,7 +65,7 @@ public abstract class TPacketPerf implements LibcConstants {
             final int cpu = startCpu + idx;
 
             final Thread thread = new Thread(() -> {
-                help.setCpu(cpu);
+                util.setCpu(cpu);
                 createHandler().loop();
             });
 
