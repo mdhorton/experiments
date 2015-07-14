@@ -32,7 +32,7 @@ public class WordTearing implements LibcConstants {
     private static final Unsafe unsafe = TheUnsafe.unsafe;
     private static final Libc libc = Libc.libc;
 
-    private static final String FNAME = "mmap.bin";
+    private static final String FNAME = "/tmp/mmap.bin";
     private static final long MAP_SIZE = 128;
 
     // when OFFSET is between 61-63 it will cause word tearing.

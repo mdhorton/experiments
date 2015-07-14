@@ -7,9 +7,14 @@ repositories {
 ext {
     logbackVersion = "1.+"
     troveVersion = "3.+"
+
+    jmhVersion = "1.10.2"
+
 }
 
 dependencies {
     compile "ch.qos.logback:logback-classic:$logbackVersion",
-            "net.sf.trove4j:trove4j:$troveVersion"
+            "net.sf.trove4j:trove4j:$troveVersion",
+            "org.openjdk.jmh:jmh-core:$jmhVersion",
+            "org.openjdk.jmh:jmh-generator-annprocess:$jmhVersion"
 }

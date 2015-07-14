@@ -17,15 +17,16 @@
 
 package net.nostromo.experiments.memory;
 
-import net.nostromo.experiments.Util;
 import net.nostromo.libc.LibcUtil;
 import net.nostromo.libc.TheUnsafe;
+import org.openjdk.jmh.annotations.*;
 import sun.misc.Unsafe;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * This experiment indicates that there is little difference in speed
- * between accessing offheap memory vs. onheap byte[]. Offheap is just a tiny
- * bit faster, but its by a small margin.
+ * between accessing offheap memory vs. onheap byte[].
  * <p>
  * The reason I conducted this experiment is that I wanted to determine the
  * fastest way to convert offheap C/C++ data structures into onheap java data
@@ -41,57 +42,59 @@ import sun.misc.Unsafe;
  * into the given data structure.
  * <p>
  * In my previous experiment, BytesPerf, I learned that unsafe is faster than
- * ByteBuffer, which is why I'm using it here.
- * <p>
- * Example results:
- * <p>
- * iteration 3 of 10
- * onheap: 34,881,496 ops/sec
- * offheap: 36,097,836 ops/sec
+ * ByteBuffer, which is why I'm not using ByteBuffer here.
  */
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+@Fork(1)
+@State(Scope.Thread)
 public class BytesVsMemoryPerf {
 
-    private static final Unsafe unsafe = TheUnsafe.unsafe;
-    private static final LibcUtil util = LibcUtil.util;
+    private Unsafe unsafe;
 
-    public static void main(String[] args) throws Exception {
-        final int iterations = 10;
-        final long limit = 100_000_000L;
+    private byte[] arr;
+    private long memory;
+    private Foo foo;
 
-        util.setCpu(8);
+    @Setup
+    public void setup() {
+        LibcUtil.util.setCpu(8);
+        unsafe = TheUnsafe.unsafe;
 
-        final byte[] arr = new byte[58];
-        final long memory = unsafe.allocateMemory(arr.length);
-
-        final Foo foo = new Foo();
-
-        for (int x = 0; x < iterations; x++) {
-            System.out.printf("\niteration %d of %d\n", (x + 1), iterations);
-
-            // test onheap bytes
-            long start = System.nanoTime();
-            for (long idx = 0; idx < limit; idx++) {
-                foo.onheapWrite(arr, 0);
-                foo.onheapRead(arr, 0);
-            }
-            long elap = System.nanoTime() - start;
-            System.out.printf("onheap: %,.0f ops/sec\n", Util.tps(limit, elap));
-
-            // test offheap memory
-            start = System.nanoTime();
-            for (long idx = 0; idx < limit; idx++) {
-                foo.offheapWrite(memory);
-                foo.offheapRead(memory);
-            }
-            elap = System.nanoTime() - start;
-            System.out.printf("offheap: %,.0f ops/sec\n", Util.tps(limit, elap));
-        }
-
-        unsafe.freeMemory(memory);
-        assert foo.var1 == 11;
+        arr = new byte[58];
+        memory = unsafe.allocateMemory(arr.length);
+        foo = new Foo();
     }
 
-    public static class Foo {
+    @TearDown
+    public void teardown() {
+        unsafe.freeMemory(memory);
+    }
+
+    @Benchmark
+    public void onHeapWrite() {
+        foo.onheapWrite(arr, 0);
+    }
+
+    @Benchmark
+    public void onHeapRead() {
+        foo.onheapRead(arr, 0);
+    }
+
+    @Benchmark
+    public void offHeapRead() {
+        foo.offheapRead(memory);
+    }
+
+    @Benchmark
+    public void offHeapWrite() {
+        foo.offheapWrite(memory);
+    }
+
+    private class Foo {
+
         public short var1 = 11;
         public short var2 = 12;
         public short var3 = 13;

@@ -17,7 +17,6 @@
 
 package net.nostromo.experiments.network.tpacket;
 
-import net.nostromo.libc.Util;
 import net.nostromo.tpacket.TPacketHandlerV3;
 import net.nostromo.tpacket.TPacketSocket;
 import org.slf4j.Logger;
@@ -34,8 +33,8 @@ public class TPacketHandlerV3Test extends TPacketHandlerV3 {
     @Override
     protected void handleTcpPacket(final long offset, final int snaplen) {
         super.handleTcpPacket(offset, snaplen);
-        if (tcpHdr.dst_port == 22 && Util.inetNtoA(ipHdr.dst_ip).equals("54.175.51.235")) {
+//        if (tcpHdr.dst_port == 22 && Util.inetNtoA(ipHdr.dst_ip).equals("54.175.51.235")) {
             log.info("{}", Integer.toUnsignedLong(tp3Hdr.hv1_u.hv1.rxhash));
-        }
+//        }
     }
 }

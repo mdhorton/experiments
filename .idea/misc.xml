@@ -2,10 +2,15 @@
 <project version="4">
   <component name="EntryPointsManager">
     <entry_points version="2.0" />
+    <list size="2">
+      <item index="0" class="java.lang.String" itemvalue="org.openjdk.jmh.annotations.Setup" />
+      <item index="1" class="java.lang.String" itemvalue="org.openjdk.jmh.annotations.TearDown" />
+    </list>
   </component>
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="web" url="file://$PROJECT_DIR$" />
     <file type="web" url="file://$PROJECT_DIR$/../libc" />
+    <file type="web" url="file://$PROJECT_DIR$/../tpacket" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
