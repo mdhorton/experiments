@@ -29,7 +29,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * I did this experiment because I needed a fast way to convert bytes
- * into a custom data structure.
+ * into a custom data structure. This shows the speed of converting bytes
+ * from various buffers into primitives.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
