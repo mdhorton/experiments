@@ -37,9 +37,9 @@ public abstract class TPacketPerf implements LibcConstants {
 
     protected boolean usePromisc = false;
 
-    protected String ifname = "enp2s0f1";
+    protected String ifname = "lo";
     protected int packetType = SOCK_RAW;
-    protected int protocol = ETH_P_ALL;
+    protected int protocol = ETH_P_IP;
 
     protected int fanoutId = libc.getpid();
     protected int fanoutType = PACKET_FANOUT_LB | PACKET_FANOUT_FLAG_DEFRAG;

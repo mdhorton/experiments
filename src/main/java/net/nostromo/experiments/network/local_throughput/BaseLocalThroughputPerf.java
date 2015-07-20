@@ -67,7 +67,7 @@ public abstract class BaseLocalThroughputPerf {
     }
 
     @Benchmark
-    public void blockingRead() throws Exception {
+    public void benchmark() throws Exception {
         runLatch.countDown();
         client.join();
         server.join();
