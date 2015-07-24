@@ -20,6 +20,7 @@ package net.nostromo.experiments.memory;
 import net.nostromo.libc.LibcUtil;
 import net.nostromo.libc.TheUnsafe;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
 import sun.misc.Unsafe;
 
 import java.util.concurrent.TimeUnit;
@@ -50,50 +51,52 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(1)
 @State(Scope.Thread)
-public class BytesVsMemoryPerf {
+public class BytesObjectPerf {
 
     private Unsafe unsafe;
-
-    private byte[] arr;
-    private long memory;
     private Foo foo;
+
+    private long pointer;
+    private byte[] byteArray;
 
     @Setup
     public void setup() {
         LibcUtil.util.setCpu(8);
         unsafe = TheUnsafe.unsafe;
-
-        arr = new byte[58];
-        memory = unsafe.allocateMemory(arr.length);
         foo = new Foo();
+
+        pointer = unsafe.allocateMemory(Foo.BYTES);
+        byteArray = new byte[Foo.BYTES];
     }
 
     @TearDown
     public void teardown() {
-        unsafe.freeMemory(memory);
+        unsafe.freeMemory(pointer);
     }
 
     @Benchmark
-    public void onHeapWrite() {
-        foo.onheapWrite(arr, 0);
+    public void readByteArray(final Blackhole hole) {
+        hole.consume(foo.byteArrayRead(byteArray, 0L));
     }
 
     @Benchmark
-    public void onHeapRead() {
-        foo.onheapRead(arr, 0);
+    public void writeByteArray() {
+        foo.byteArrayWrite(byteArray, 0L);
     }
 
     @Benchmark
-    public void offHeapRead() {
-        foo.offheapRead(memory);
+    public void readPointer(final Blackhole hole) {
+        hole.consume(foo.readPointer(pointer));
     }
 
     @Benchmark
-    public void offHeapWrite() {
-        foo.offheapWrite(memory);
+    public void writePointer() {
+        foo.writePointer(pointer);
     }
 
     private class Foo {
+
+        public final static int BYTES = 58;
 
         public short var1 = 11;
         public short var2 = 12;
@@ -106,51 +109,55 @@ public class BytesVsMemoryPerf {
         public int var9 = 19;
         public byte[] var10 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
-        public void onheapRead(final byte[] arr, long offset) {
-            var1 = unsafe.getShort(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET);
+        public long byteArrayRead(final byte[] arr, long offset) {
+            offset += Unsafe.ARRAY_BYTE_BASE_OFFSET;
+            var1 = unsafe.getShort(arr, offset);
             offset += 2;
-            var2 = unsafe.getShort(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET);
+            var2 = unsafe.getShort(arr, offset);
             offset += 2;
-            var3 = unsafe.getShort(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET);
+            var3 = unsafe.getShort(arr, offset);
             offset += 2;
-            var4 = unsafe.getLong(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET);
+            var4 = unsafe.getLong(arr, offset);
             offset += 8;
-            var5 = unsafe.getLong(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET);
+            var5 = unsafe.getLong(arr, offset);
             offset += 8;
-            var6 = unsafe.getLong(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET);
+            var6 = unsafe.getLong(arr, offset);
             offset += 8;
-            var7 = unsafe.getInt(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET);
+            var7 = unsafe.getInt(arr, offset);
             offset += 4;
-            var8 = unsafe.getInt(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET);
+            var8 = unsafe.getInt(arr, offset);
             offset += 4;
-            var9 = unsafe.getInt(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET);
+            var9 = unsafe.getInt(arr, offset);
             offset += 4;
             unsafe.copyMemory(arr, offset, var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, var10.length);
+
+            return var1 + var2 - var3 + var4 - var5 + var6 - var7 + var8 - var9;
         }
 
-        public void onheapWrite(final byte[] arr, long offset) {
-            unsafe.putShort(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET, var1);
+        public void byteArrayWrite(final byte[] arr, long offset) {
+            offset += Unsafe.ARRAY_BYTE_BASE_OFFSET;
+            unsafe.putShort(arr, offset, var1);
             offset += 2;
-            unsafe.putShort(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET, var2);
+            unsafe.putShort(arr, offset, var2);
             offset += 2;
-            unsafe.putShort(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET, var3);
+            unsafe.putShort(arr, offset, var3);
             offset += 2;
-            unsafe.putLong(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET, var4);
+            unsafe.putLong(arr, offset, var4);
             offset += 8;
-            unsafe.putLong(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET, var5);
+            unsafe.putLong(arr, offset, var5);
             offset += 8;
-            unsafe.putLong(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET, var6);
+            unsafe.putLong(arr, offset, var6);
             offset += 8;
-            unsafe.putInt(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET, var7);
+            unsafe.putInt(arr, offset, var7);
             offset += 4;
-            unsafe.putInt(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET, var8);
+            unsafe.putInt(arr, offset, var8);
             offset += 4;
-            unsafe.putInt(arr, offset + Unsafe.ARRAY_BYTE_BASE_OFFSET, var9);
+            unsafe.putInt(arr, offset, var9);
             offset += 4;
             unsafe.copyMemory(var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, arr, offset, var10.length);
         }
 
-        public void offheapRead(long offset) {
+        public long readPointer(long offset) {
             var1 = unsafe.getShort(offset);
             offset += 2;
             var2 = unsafe.getShort(offset);
@@ -170,9 +177,11 @@ public class BytesVsMemoryPerf {
             var9 = unsafe.getInt(offset);
             offset += 4;
             unsafe.copyMemory(null, offset, var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, var10.length);
+
+            return var1 + var2 - var3 + var4 - var5 + var6 - var7 + var8 - var9;
         }
 
-        public void offheapWrite(long offset) {
+        public void writePointer(long offset) {
             unsafe.putShort(offset, var1);
             offset += 2;
             unsafe.putShort(offset, var2);

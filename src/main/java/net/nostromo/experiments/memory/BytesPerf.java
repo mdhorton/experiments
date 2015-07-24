@@ -40,10 +40,12 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Thread)
 public class BytesPerf {
 
+    private final long l = 10;
+
     private Unsafe unsafe;
 
-    private long memory;
-    private byte[] buffer;
+    private long pointer;
+    private byte[] byteArray;
     private LongBuffer lb;
     private LongBuffer lbd;
     private ByteBuffer bb;
@@ -54,17 +56,15 @@ public class BytesPerf {
         LibcUtil.util.setCpu(8);
         unsafe = TheUnsafe.unsafe;
 
-        memory = unsafe.allocateMemory(Long.BYTES);
-        buffer = new byte[Long.BYTES];
+        pointer = unsafe.allocateMemory(Long.BYTES);
+        byteArray = new byte[Long.BYTES];
         lb = LongBuffer.allocate(1);
         lbd = ByteBuffer.allocateDirect(Long.BYTES).asLongBuffer();
         bb = ByteBuffer.allocate(Long.BYTES);
         bbd = ByteBuffer.allocateDirect(Long.BYTES);
 
-        final long l = -6392742284531334230L;
-
-        unsafe.putLong(memory, l);
-        unsafe.putLong(buffer, (long) Unsafe.ARRAY_BYTE_BASE_OFFSET, l);
+        unsafe.putLong(pointer, l);
+        unsafe.putLong(byteArray, (long) Unsafe.ARRAY_BYTE_BASE_OFFSET, l);
         lb.put(0, l);
         lbd.put(0, l);
         bb.putLong(0, l);
@@ -73,36 +73,66 @@ public class BytesPerf {
 
     @TearDown
     public void teardown() {
-        unsafe.freeMemory(memory);
+        unsafe.freeMemory(pointer);
     }
 
     @Benchmark
-    public void unsafePointer(final Blackhole hole) {
-        hole.consume(unsafe.getLong(memory, 0L));
+    public void readPointer(final Blackhole hole) {
+        hole.consume(unsafe.getLong(pointer));
     }
 
     @Benchmark
-    public void unsafeBuffer(final Blackhole hole) {
-        hole.consume(unsafe.getLong(buffer, (long) Unsafe.ARRAY_BYTE_BASE_OFFSET));
+    public void readByteArray(final Blackhole hole) {
+        hole.consume(unsafe.getLong(byteArray, (long) Unsafe.ARRAY_BYTE_BASE_OFFSET));
     }
 
     @Benchmark
-    public void longBuffer(final Blackhole hole) {
+    public void readLongBuffer(final Blackhole hole) {
         hole.consume(lb.get(0));
     }
 
     @Benchmark
-    public void longBufferDirect(final Blackhole hole) {
+    public void readLongBufferDirect(final Blackhole hole) {
         hole.consume(lbd.get(0));
     }
 
     @Benchmark
-    public void byteBuffer(final Blackhole hole) {
+    public void readByteBuffer(final Blackhole hole) {
         hole.consume(bb.getLong(0));
     }
 
     @Benchmark
-    public void byteBufferDirect(final Blackhole hole) {
+    public void readByteBufferDirect(final Blackhole hole) {
         hole.consume(bbd.getLong(0));
+    }
+
+    @Benchmark
+    public void writePointer() {
+        unsafe.putLong(pointer, l);
+    }
+
+    @Benchmark
+    public void writeByteArray() {
+        unsafe.putLong(byteArray, (long) Unsafe.ARRAY_BYTE_BASE_OFFSET, l);
+    }
+
+    @Benchmark
+    public void writeLongBuffer() {
+        lb.put(0, l);
+    }
+
+    @Benchmark
+    public void writeLongBufferDirect() {
+        lbd.put(0, l);
+    }
+
+    @Benchmark
+    public void writeByteBuffer() {
+        bb.putLong(0, l);
+    }
+
+    @Benchmark
+    public void writeByteBufferDirect() {
+        bbd.putLong(0, l);
     }
 }
