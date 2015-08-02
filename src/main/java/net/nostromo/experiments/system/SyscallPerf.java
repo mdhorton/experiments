@@ -36,7 +36,7 @@ public class SyscallPerf {
 
     @Setup
     public void setup() {
-        LibcUtil.util.setCpu(8);
+        LibcUtil.util.setLastCpu();
         libc = Libc.libc;
     }
 

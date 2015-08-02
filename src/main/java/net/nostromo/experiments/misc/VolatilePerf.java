@@ -15,58 +15,42 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.nostromo.experiments.system;
+package net.nostromo.experiments.misc;
 
-import net.nostromo.libc.Libc;
-import net.nostromo.libc.LibcConstants;
-import net.nostromo.libc.struct.system.Timespec;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.atomic.AtomicLong;
 
-// all of these have a minimum sleep of ~58 micros
+// this shows how volatile reads and volatile writes interfere with each other.
+// change @GroupThreads(X) to see the effects.
+// when both are 1 they slow down, expecially the write.
+// when one is 0, the other is fast of course.
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(1)
-public class SleepPerf implements LibcConstants {
+public class VolatilePerf {
 
     @State(Scope.Benchmark)
     public static class Shared {
-        private final Libc libc = Libc.libc;
-        private Timespec req;
-        private Timespec rem;
-        private long ptr_req;
-        private long ptr_rem;
-
-        @Setup
-        public void setup() {
-            req = new Timespec();
-            rem = new Timespec();
-
-            req.tv_sec = 0;
-            req.tv_nsec = 1;
-
-            ptr_req = req.pointer();
-            ptr_rem = rem.pointer();
-        }
+        private final AtomicLong vol = new AtomicLong();
     }
 
     @Benchmark
-    public void parkNanos() {
-        LockSupport.parkNanos(1);
+    @Group("volatile")
+    @GroupThreads(1)
+    public void write(final Blackhole hole, final Shared shared) {
+        hole.consume(shared.vol.incrementAndGet());
     }
 
     @Benchmark
-    public void nanoSleep(final Shared shared) {
-        shared.libc.nanosleep(shared.ptr_req, shared.ptr_rem);
-    }
-
-    @Benchmark
-    public void clockNanoSleep(final Shared shared) {
-        shared.libc.clock_nanosleep(CLOCK_REALTIME, 0, shared.ptr_req, shared.ptr_rem);
+    @Group("volatile")
+    @GroupThreads(1)
+    public void read(final Blackhole hole, final Shared shared) {
+        hole.consume(shared.vol.get());
     }
 }

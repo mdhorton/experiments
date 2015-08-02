@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 // Using copyMemory() for less than ~32 bytes is relatively expensive.
 // IOW copying 1 byte is about the same as copying 32 bytes.
-// So unless you need to copy many bytes, its best to use some other
+// So unless you need to copy >32 bytes, its best to use some other
 // means if possible.
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -44,11 +44,10 @@ public class CopyMemoryPerf {
 
     @Setup
     public void setup() {
-        LibcUtil.util.setCpu(8);
+        LibcUtil.util.setLastCpu();
         unsafe = TheUnsafe.unsafe;
 
         pointer = unsafe.allocateMemory(byteArray.length);
-
     }
 
     @TearDown

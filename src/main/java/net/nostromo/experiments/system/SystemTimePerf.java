@@ -26,6 +26,8 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.concurrent.TimeUnit;
 
+// RDTSCP is the fastest
+
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
@@ -34,17 +36,13 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Thread)
 public class SystemTimePerf implements LibcConstants {
 
-    private Libc libc;
-    private Timespec timespec;
-    private long ptr_timespec;
+    private final Libc libc = Libc.libc;
+    private final Timespec timespec = new Timespec();
+    private final long ptr_timespec = timespec.pointer();
 
     @Setup
     public void setup() {
-        LibcUtil.util.setCpu(8);
-        libc = Libc.libc;
-
-        timespec = new Timespec();
-        ptr_timespec = timespec.pointer();
+        LibcUtil.util.setLastCpu();
     }
 
     @Benchmark
@@ -70,7 +68,7 @@ public class SystemTimePerf implements LibcConstants {
     }
 
     @Benchmark
-    public void monotincCoarse(final Blackhole hole) {
+    public void monotonicCoarse(final Blackhole hole) {
         libc.clock_gettime(CLOCK_MONOTONIC_COARSE, ptr_timespec);
         timespec.read();
         hole.consume(timespec.tv_sec);

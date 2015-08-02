@@ -25,26 +25,6 @@ import sun.misc.Unsafe;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * This experiment indicates that there is little difference in speed
- * between accessing offheap memory vs. onheap byte[].
- * <p>
- * The reason I conducted this experiment is that I wanted to determine the
- * fastest way to convert offheap C/C++ data structures into onheap java data
- * structures.
- * <p>
- * My first idea was to copy the offheap bytes in bulk into intermediate
- * onheap byte arrays. Then to convert the byte arrays to java data
- * structures.
- * <p>
- * My assumption was that it would be costly to invoke the Unsafe getters
- * frequently. But this experiment indicates that the intermediary byte array
- * is not needed. Its faster to simply read the bytes directly from offheap
- * into the given data structure.
- * <p>
- * In my previous experiment, BytesPerf, I learned that unsafe is faster than
- * ByteBuffer, which is why I'm not using ByteBuffer here.
- */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
@@ -52,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 @Fork(1)
 @State(Scope.Thread)
 public class BytesObjectPerf {
+
+    private final boolean useVar10 = false;
 
     private Unsafe unsafe;
     private Foo foo;
@@ -61,7 +43,7 @@ public class BytesObjectPerf {
 
     @Setup
     public void setup() {
-        LibcUtil.util.setCpu(8);
+        LibcUtil.util.setLastCpu();
         unsafe = TheUnsafe.unsafe;
         foo = new Foo();
 
@@ -128,8 +110,10 @@ public class BytesObjectPerf {
             var8 = unsafe.getInt(arr, offset);
             offset += 4;
             var9 = unsafe.getInt(arr, offset);
-            offset += 4;
-            unsafe.copyMemory(arr, offset, var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, var10.length);
+            if (useVar10) {
+                offset += 4;
+                unsafe.copyMemory(arr, offset, var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, var10.length);
+            }
 
             return var1 + var2 - var3 + var4 - var5 + var6 - var7 + var8 - var9;
         }
@@ -153,8 +137,10 @@ public class BytesObjectPerf {
             unsafe.putInt(arr, offset, var8);
             offset += 4;
             unsafe.putInt(arr, offset, var9);
-            offset += 4;
-            unsafe.copyMemory(var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, arr, offset, var10.length);
+            if (useVar10) {
+                offset += 4;
+                unsafe.copyMemory(var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, arr, offset, var10.length);
+            }
         }
 
         public long readPointer(long offset) {
@@ -175,8 +161,10 @@ public class BytesObjectPerf {
             var8 = unsafe.getInt(offset);
             offset += 4;
             var9 = unsafe.getInt(offset);
-            offset += 4;
-            unsafe.copyMemory(null, offset, var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, var10.length);
+            if (useVar10) {
+                offset += 4;
+                unsafe.copyMemory(null, offset, var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, var10.length);
+            }
 
             return var1 + var2 - var3 + var4 - var5 + var6 - var7 + var8 - var9;
         }
@@ -199,8 +187,10 @@ public class BytesObjectPerf {
             unsafe.putInt(offset, var8);
             offset += 4;
             unsafe.putInt(offset, var9);
-            offset += 4;
-            unsafe.copyMemory(var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, null, offset, var10.length);
+            if (useVar10) {
+                offset += 4;
+                unsafe.copyMemory(var10, Unsafe.ARRAY_BYTE_BASE_OFFSET, null, offset, var10.length);
+            }
         }
     }
 }

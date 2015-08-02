@@ -19,10 +19,6 @@ package net.nostromo.experiments;
 
 public class Util {
 
-    public static double tps(final long count, final long nanos) {
-        return count / (nanos / (double) 1_000_000_000);
-    }
-
     public static String F(final String fmt, final Object... args) {
         return String.format(fmt, args);
     }

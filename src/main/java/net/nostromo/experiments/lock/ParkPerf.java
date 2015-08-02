@@ -15,58 +15,53 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.nostromo.experiments.system;
+package net.nostromo.experiments.lock;
 
-import net.nostromo.libc.Libc;
-import net.nostromo.libc.LibcConstants;
-import net.nostromo.libc.struct.system.Timespec;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Control;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
 
-// all of these have a minimum sleep of ~58 micros
+// park()/unpark() costs ~27 micros
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(1)
-public class SleepPerf implements LibcConstants {
+public class ParkPerf {
 
     @State(Scope.Benchmark)
     public static class Shared {
-        private final Libc libc = Libc.libc;
-        private Timespec req;
-        private Timespec rem;
-        private long ptr_req;
-        private long ptr_rem;
+        private final AtomicInteger idx = new AtomicInteger();
+        private volatile Thread one;
+        private volatile Thread two;
+    }
 
-        @Setup
-        public void setup() {
-            req = new Timespec();
-            rem = new Timespec();
+    @State(Scope.Thread)
+    public static class ThreadState {
+        private int idx;
+    }
 
-            req.tv_sec = 0;
-            req.tv_nsec = 1;
-
-            ptr_req = req.pointer();
-            ptr_rem = rem.pointer();
+    @Benchmark
+    @Group("park")
+    @GroupThreads(2)
+    public void park(final Shared shared, final ThreadState ts, final Control control)
+            throws Exception {
+        if (ts.idx == 0) {
+            ts.idx = shared.idx.incrementAndGet();
+            if (ts.idx == 1) shared.one = Thread.currentThread();
+            else shared.two = Thread.currentThread();
         }
-    }
 
-    @Benchmark
-    public void parkNanos() {
-        LockSupport.parkNanos(1);
-    }
+        if (shared.one == null || shared.two == null) return;
 
-    @Benchmark
-    public void nanoSleep(final Shared shared) {
-        shared.libc.nanosleep(shared.ptr_req, shared.ptr_rem);
-    }
+        if (ts.idx == 1) LockSupport.unpark(shared.two);
+        else LockSupport.unpark(shared.one);
 
-    @Benchmark
-    public void clockNanoSleep(final Shared shared) {
-        shared.libc.clock_nanosleep(CLOCK_REALTIME, 0, shared.ptr_req, shared.ptr_rem);
+        if (control.stopMeasurement) return;
+        LockSupport.park();
     }
 }

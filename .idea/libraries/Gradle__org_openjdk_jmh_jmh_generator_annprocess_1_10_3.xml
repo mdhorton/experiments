@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.openjdk.jmh:jmh-generator-annprocess:1.10.3">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-generator-annprocess/1.10.3/7740a9f53de28ddf921a823dfb0d51ab17baa094/jmh-generator-annprocess-1.10.3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-generator-annprocess/1.10.3/6e387b4161f440cbf5e405e79c00b60a9b19845f/jmh-generator-annprocess-1.10.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

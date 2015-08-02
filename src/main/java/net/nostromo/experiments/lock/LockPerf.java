@@ -15,33 +15,46 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.nostromo.experiments.system;
+package net.nostromo.experiments.lock;
 
-import net.nostromo.libc.Libc;
-import net.nostromo.libc.LibcUtil;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-// JNI overhead is about 10ns
+// reentrant lock/unlock costs
+//   2 threads  ~300ns
+//   3 threads  ~400ns
+//   4 threads  ~500ns
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(1)
-@State(Scope.Thread)
-public class JniPerf {
+@Threads(4)
+public class LockPerf {
 
-    private Libc libc = Libc.libc;
+    @State(Scope.Thread)
+    public static class ThreadIndex {
+        private long idx;
+    }
 
-    @Setup
-    public void setup() {
-        LibcUtil.util.setLastCpu();
+    @State(Scope.Benchmark)
+    public static class SharedLock {
+        private final Lock lock = new ReentrantLock();
     }
 
     @Benchmark
-    public void noop() {
-        libc.noop();
+    public void lock(final Blackhole hole, final SharedLock shared, final ThreadIndex index) {
+        shared.lock.lock();
+        try {
+            hole.consume(index.idx++);
+        }
+        finally {
+            shared.lock.unlock();
+        }
     }
 }

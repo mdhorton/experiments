@@ -26,16 +26,12 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
-/**
- * This was a sanity test to verify that a slection key
- * remains active until its operation is no longer valid.
- * IOW if a channel is readable, is will be returned again
- * in the selection list until all bytes have been read.
- */
-public class SelectorTest {
+// this test verifies that select() using epoll() is level-triggered
+// and not edge-triggered
+public class SelectEpollTest {
 
     public static void main(String[] args) throws Exception {
-        new SelectorTest().foo();
+        new SelectEpollTest().foo();
     }
 
     public void foo() throws Exception {

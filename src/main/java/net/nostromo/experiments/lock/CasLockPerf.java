@@ -15,58 +15,45 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.nostromo.experiments.system;
+package net.nostromo.experiments.lock;
 
-import net.nostromo.libc.Libc;
-import net.nostromo.libc.LibcConstants;
-import net.nostromo.libc.struct.system.Timespec;
 import org.openjdk.jmh.annotations.*;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-// all of these have a minimum sleep of ~58 micros
+// tcas scales better than cas, but you need
+// ~6+ threads to see a significant difference.
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(1)
-public class SleepPerf implements LibcConstants {
+public class CasLockPerf {
 
     @State(Scope.Benchmark)
     public static class Shared {
-        private final Libc libc = Libc.libc;
-        private Timespec req;
-        private Timespec rem;
-        private long ptr_req;
-        private long ptr_rem;
+        private final AtomicBoolean state = new AtomicBoolean();
+    }
 
-        @Setup
-        public void setup() {
-            req = new Timespec();
-            rem = new Timespec();
+    @Benchmark
+    @Group("cas")
+    @GroupThreads(6)
+    public void cas(final Shared shared) {
+        while (shared.state.getAndSet(true)) {}
+        shared.state.set(false);
+    }
 
-            req.tv_sec = 0;
-            req.tv_nsec = 1;
-
-            ptr_req = req.pointer();
-            ptr_rem = rem.pointer();
+    @Benchmark
+    @Group("tcas")
+    @GroupThreads(6)
+    public void tcas(final Shared shared) {
+        while (true) {
+            while (shared.state.get()) {}
+            if (!shared.state.getAndSet(true)) break;
         }
-    }
 
-    @Benchmark
-    public void parkNanos() {
-        LockSupport.parkNanos(1);
-    }
-
-    @Benchmark
-    public void nanoSleep(final Shared shared) {
-        shared.libc.nanosleep(shared.ptr_req, shared.ptr_rem);
-    }
-
-    @Benchmark
-    public void clockNanoSleep(final Shared shared) {
-        shared.libc.clock_nanosleep(CLOCK_REALTIME, 0, shared.ptr_req, shared.ptr_rem);
+        shared.state.set(false);
     }
 }

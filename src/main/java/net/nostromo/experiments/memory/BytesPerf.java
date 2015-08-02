@@ -27,11 +27,6 @@ import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.util.concurrent.TimeUnit;
 
-/**
- * I did this experiment because I needed a fast way to convert bytes
- * into a custom data structure. This shows the speed of converting bytes
- * from various buffers into primitives.
- */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
@@ -40,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Thread)
 public class BytesPerf {
 
-    private final long l = 10;
+    private final long l = -6392742284531334230L;
 
     private Unsafe unsafe;
 
@@ -53,7 +48,7 @@ public class BytesPerf {
 
     @Setup
     public void setup() {
-        LibcUtil.util.setCpu(8);
+        LibcUtil.util.setLastCpu();
         unsafe = TheUnsafe.unsafe;
 
         pointer = unsafe.allocateMemory(Long.BYTES);
