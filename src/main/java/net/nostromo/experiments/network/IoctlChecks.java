@@ -30,7 +30,7 @@ public class IoctlChecks implements LibcConstants {
 
     private final Libc libc = Libc.libc;
     private final Unsafe unsafe = TheUnsafe.unsafe;
-    private final String ifname = "enp2s0f1";
+    private final String ifname = "enp2s0";
 
     // this indicates the intel 82576 nic is not doing hardware timestamps,
     // this confirms what's in the driver source code
